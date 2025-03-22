@@ -2,17 +2,17 @@ import Hapi from "@hapi/hapi"
 import dotenv from "dotenv";
 import validate from "./service/validate.js";
 import hapiAuthJwt2 from "hapi-auth-jwt2";
-import { handlerRegister, handlerLogin } from "./service/handler.js";
+import { handlerRegister, handlerLogin, handlerTransactions } from "./service/handler.js";
 import pool from "./config/database.js";
 
 dotenv.config();
 
 const init = async () => {
     const server = Hapi.server({
-        port: process.env.PORT || 3000,
-        host: '0.0.0.0',
-        // port: 9000,
-        // host: 'localhost',
+        // port: process.env.PORT || 3000,
+        // host: '0.0.0.0',
+        port: 9000,
+        host: 'localhost',
         routes: {
             cors: {
                 origin: ['*'],
@@ -56,6 +56,12 @@ const init = async () => {
         handler: (request, h) => {
             return h.response({ message: "Access granted", user: request.auth.credentials }).code(200);
         }, 
+    });
+
+    server.route({
+        method: "POST",
+        path: "/transactions",
+        handler: handlerTransactions
     });
 
     console.log(`server berjalan di ${server.info.uri}`)

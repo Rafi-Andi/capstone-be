@@ -14,7 +14,7 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-const createTable = async () => {
+const createTables = async () => {
   const connection = await pool.getConnection();
   try {
     await connection.query(`
@@ -26,6 +26,19 @@ const createTable = async () => {
       );
     `);
     console.log("✅ Table 'users' siap digunakan.");
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS transactions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        amount DECIMAL(15,2) NOT NULL,
+        type ENUM('income', 'expense') NOT NULL,
+        description TEXT,
+        transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+    console.log("✅ Table 'transactions' siap digunakan.");
   } catch (error) {
     console.error("❌ Gagal membuat tabel:", error);
   } finally {
@@ -33,6 +46,6 @@ const createTable = async () => {
   }
 };
 
-createTable();
+createTables();
 
 export default pool;

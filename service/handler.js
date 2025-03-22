@@ -51,6 +51,7 @@ export const handlerLogin = async (request, h) => {
 
         const objekToken = {
             id: user.id,
+            username: user.username,
             email: user.email
         };
         const token = generateToken(objekToken);
@@ -61,3 +62,7 @@ export const handlerLogin = async (request, h) => {
         return h.response({ error: "Gagal login", detail: err.message }).code(500);
     }
 };
+
+export const handlerTransactions = () => {
+
+}
