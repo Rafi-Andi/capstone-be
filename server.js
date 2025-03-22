@@ -11,6 +11,15 @@ const init = async () => {
     const server = Hapi.server({
         port: process.env.PORT || 3000,
         host: '0.0.0.0',
+        // port: 9000,
+        // host: 'localhost',
+        routes: {
+            cors: {
+                origin: ['*'],
+                headers: ['Accept', 'Content-Type', 'Authorization'],
+                additionalHeaders: ['X-Requested-With'],
+            }
+        }
     })
 
     await server.register(hapiAuthJwt2)

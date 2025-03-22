@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Inisialisasi pool dulu sebelum digunakan
 const pool = mysql.createPool({
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
@@ -15,14 +14,14 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Fungsi untuk membuat tabel jika belum ada
 const createTable = async () => {
-  const connection = await pool.getConnection(); // Sekarang pool sudah ada
+  const connection = await pool.getConnection();
   try {
     await connection.query(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(100) NOT NULL UNIQUE,
+        email VARCHAR(200) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL
       );
     `);
@@ -34,7 +33,6 @@ const createTable = async () => {
   }
 };
 
-// Panggil fungsi setelah pool dibuat
 createTable();
 
 export default pool;
