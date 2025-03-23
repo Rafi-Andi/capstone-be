@@ -20,6 +20,7 @@ const createTables = async () => {
     await connection.query(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id VARCHAR(21) NOT NULL UNIQUE,  -- Nanoid sebagai user ID
         username VARCHAR(100) NOT NULL UNIQUE,
         email VARCHAR(200) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL
