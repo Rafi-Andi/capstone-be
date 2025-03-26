@@ -3,16 +3,9 @@ import users from "./users.js"
 import bcrypt from "bcryptjs"
 import pool from "../config/database.js"
 import { nanoid } from "nanoid"
+import axios from "axios"
 
 export const handlerRegister = async (request, h) => {
-    // const hashedPassword = await bcrypt.hash(password, 10)
-    // const newUser = {
-        //     id: users.length + 1,
-        //     username,
-        //     password: hashedPassword
-        // }
-        
-        // users.push(newUser)
         
     
     try {
@@ -86,6 +79,75 @@ export const handlerLogin = async (request, h) => {
     }
 };
 
-export const handlerTransactions = () => {
+export const handlerTransactions = async (request, h) => {
+    try {   
+        const {user_id} = request.params
+        const {jumlah, type, deskripsi, tanggal} = request.payload
 
+        const [result] = await pool.query("INSERT INTO transactions (user_id, amount, type, description, transaction_date) VALUES (?, ?, ?, ?, ?)", [user_id, jumlah, type, deskripsi, tanggal])
+        
+        return h.response({
+            status: "Sukses",
+            pesan: "Berhasil menambahkan transaksi"
+        }).code(201)
+    } catch(err){
+        return h.response({
+            status: "Error",
+            pesan: `gagal menambahkan transaksi ${err}`
+        }).code(501)
+    }
+}
+
+export const handlerTotalTransactions = async (request, h) => {
+    try {
+        const {user_id} = request.params
+
+        const [rows] = await pool.query("SELECT * FROM `total_transactions` WHERE user_id = ?", [user_id])
+
+        const transactions = rows[0]
+
+        return h.response({
+            status: "Sukses",
+            data: {
+                user_id: transactions.user_id,
+                total_pemasukan: transactions.total_pemasukan,
+                total_pengeluaran: transactions.total_pengeluaran,
+                saldo_sekarang: transactions.saldo_sekarang
+            }
+        }).code(200)
+    } catch(err) {
+        return h.response({
+            status: "Error",
+            pesan: "Gagal menampilkan rangkuman transaksi", 
+            detail: err
+        })
+    }
+}
+
+export const handlerChatBot = async (request, h) => {
+    const {user_id} = request.params
+    const {text} = request.payload
+    const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCBcnIBzJH4LtPUWZwL26iYfU1cMwWrTBQ"
+    
+    const requestData = {
+        contents: [
+            {
+                parts: [{ text }]
+            }
+        ]
+    };
+    try{
+        const response = await axios.post(API_URL, requestData, {
+            headers: { 'Content-Type': 'application/json' }
+        })
+        return h.response({
+            status: "Sukses",
+            pesan: response.data.candidates[0].content.parts[0].text
+        }).code(200)
+    } catch(err) {
+        return h.response({
+            status: "Error",
+            pesan: "Maaf terjadi masalah servis, mohon tunggu dan kirim kembali"
+        })
+    }
 }
