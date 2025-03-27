@@ -11,7 +11,8 @@ const pool = mysql.createPool({
   port: process.env.MYSQLPORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  timezone: '+07:00'
 });
 
 const createTables = async () => {
@@ -35,7 +36,7 @@ const createTables = async () => {
         amount DECIMAL(15,2) NOT NULL,
         type ENUM('pemasukan', 'pengeluaran') NOT NULL,
         description TEXT,
-        transaction_date DATETIME NOT NULL,
+        transaction_date DATE NOT NULL,  -- Mengubah dari DATETIME ke DATE
         FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
       );
     `);
