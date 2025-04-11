@@ -5,6 +5,7 @@
 ### 1. Registrasi Pengguna
 - **URL:** `/register`
 - **Metode:** `POST`
+- **Autentikasi:** Tidak diperlukan
 
 #### Request
 ```json
@@ -45,6 +46,7 @@
 ### 2. Login Pengguna
 - **URL:** `/login`
 - **Metode:** `POST`
+- **Autentikasi:** Tidak diperlukan
 
 #### Request
 ```json
@@ -78,8 +80,9 @@
 ```
 
 ### 3. Tambah Transaksi
-- **URL:** `/transactions/{user_id}`
+- **URL:** `/transactions`
 - **Metode:** `POST`
+- **Autentikasi:** Token diperlukan
 
 #### Request
 ```json
@@ -108,8 +111,9 @@
 ```
 
 ### 4. Ringkasan Transaksi
-- **URL:** `/transactions/{user_id}`
+- **URL:** `/transactions/summary`
 - **Metode:** `GET`
+- **Autentikasi:** Token diperlukan
 
 #### Respons Sukses (200)
 ```json
@@ -124,9 +128,18 @@
 }
 ```
 
+#### Respons Gagal (500)
+```json
+{
+  "status": "Error",
+  "pesan": "Gagal mendapatkan ringkasan transaksi: [detail error]"
+}
+```
+
 ### 5. Detail Transaksi
-- **URL:** `/transactions/detail/{user_id}`
+- **URL:** `/transactions/detail`
 - **Metode:** `GET`
+- **Autentikasi:** Token diperlukan
 
 #### Respons Sukses (200)
 ```json
@@ -154,18 +167,18 @@
 }
 ```
 
-#### Respons Tidak Ada Data (404)
+#### Respons Gagal (500)
 ```json
 {
   "status": "Error",
-  "pesan": "Tidak ada data yang tersedia",
-  "data": []
+  "pesan": "Gagal mendapatkan detail transaksi: [detail error]"
 }
 ```
 
 ### 6. Chatbot AI
-- **URL:** `/chatbot/{user_id}`
+- **URL:** `/chatbot`
 - **Metode:** `POST`
+- **Autentikasi:** Token diperlukan
 
 #### Request
 ```json
@@ -189,3 +202,8 @@
   "pesan": "Maaf terjadi masalah servis, mohon tunggu dan kirim kembali"
 }
 ```
+
+## ⚠️ Catatan Penting
+- Semua endpoint kecuali `/register` dan `/login` memerlukan autentikasi dengan token JWT.
+- Token harus disertakan di header permintaan dengan format: `Authorization: Bearer [token]`.
+- Semua respons error akan menyertakan pesan yang informatif untuk membantu penyelesaian masalah.
