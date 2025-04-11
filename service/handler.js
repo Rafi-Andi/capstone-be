@@ -97,18 +97,17 @@ export const handlerLogin = async (request, h) => {
   }
 };
 
-export const handlerTransactions = async (request, h) => {
+export const handlerAddTransactions = async (request, h) => {
   try {
-    const { user_id } = request.params;
+    const { id } = request.auth.credentials;
     const { jumlah, type, deskripsi, tanggal } = request.payload;
     const localMoment = moment.tz(tanggal, "Asia/Jakarta").endOf("day");
 
-    // Konversi ke UTC
     const utcDate = localMoment.utc().format("YYYY-MM-DD HH:mm:ss");
 
     const [result] = await pool.query(
       "INSERT INTO transactions (user_id, amount, type, description, transaction_date) VALUES (?, ?, ?, ?, ?)",
-      [user_id, jumlah, type, deskripsi, utcDate]
+      [id, jumlah, type, deskripsi, utcDate]
     );
 
     return h
@@ -127,13 +126,13 @@ export const handlerTransactions = async (request, h) => {
   }
 };
 
-export const handlerTotalTransactions = async (request, h) => {
+export const handlerSummaryTransactions = async (request, h) => {
   try {
-    const { user_id } = request.params;
+    const { id } = request.auth.credentials;
 
     const [rows] = await pool.query(
       "SELECT * FROM `total_transactions` WHERE user_id = ?",
-      [user_id]
+      [id]
     );
 
     const transactions = rows[0];
@@ -159,21 +158,21 @@ export const handlerTotalTransactions = async (request, h) => {
 };
 
 export const handlerDetailTransactions = async (request, h) => {
-  const { user_id } = request.params;
+  const { id } = request.auth.credentials;
 
   try {
     const [rows] = await pool.query(
       `SELECT 
-    id,
-    user_id,
-    CONCAT('Rp ', FORMAT(amount, 0, 'id_ID')) AS amount,
-    type,
-    description,
-    DATE_FORMAT(transaction_date, '%d %M %Y') AS transaction_date
-  FROM transactions
-  WHERE user_id = ?
-  ORDER BY transaction_date DESC;`,
-      [user_id]
+        id,
+        user_id,
+        CONCAT('Rp ', FORMAT(amount, 0, 'id_ID')) AS amount,
+        type,
+        description,
+        transaction_date
+      FROM transactions
+      WHERE user_id = ?
+      ORDER BY transaction_date DESC;`,
+      [id]
     );
 
     const formattedRows = rows.map((row) => ({
@@ -201,7 +200,6 @@ export const handlerDetailTransactions = async (request, h) => {
 };
 
 export const handlerChatBot = async (request, h) => {
-  const { user_id } = request.params;
   const { text } = request.payload;
   const API_URL =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCBcnIBzJH4LtPUWZwL26iYfU1cMwWrTBQ";

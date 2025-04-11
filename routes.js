@@ -1,4 +1,4 @@
-import { handlerRegister, handlerLogin, handlerTransactions, handlerTotalTransactions, handlerChatBot, handlerDetailTransactions } from "./service/handler.js";
+import { handlerRegister, handlerLogin, handlerAddTransactions, handlerSummaryTransactions, handlerChatBot, handlerDetailTransactions } from "./service/handler.js";
 
 const routes = [
   {
@@ -18,32 +18,23 @@ const routes = [
     handler: handlerLogin,
   },
   {
-    method: "GET",
-    path: "/protected",
-    handler: (request, h) => {
-      return h
-        .response({ message: "Access granted", user: request.auth.credentials })
-        .code(200);
-    },
-  },
-  {
     method: "POST",
-    path: "/transactions/{user_id}",
-    handler: handlerTransactions,
+    path: "/transactions",
+    handler: handlerAddTransactions,
   },
   {
     method: "GET",
-    path: "/transactions/{user_id}",
-    handler: handlerTotalTransactions
+    path: "/transactions/summary",
+    handler: handlerSummaryTransactions
   },
   {
     method: "GET",
-    path: "/transactions/detail/{user_id}",
+    path: "/transactions/detail",
     handler: handlerDetailTransactions
   },
   {
     method: "POST",
-    path: "/chatbot/{user_id}",
+    path: "/chatbot",
     handler: handlerChatBot
   },
 ];
