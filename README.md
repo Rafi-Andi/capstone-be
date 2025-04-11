@@ -154,15 +154,6 @@
 }
 ```
 
-#### Respons Tidak Ada Data (404)
-```json
-{
-  "status": "Error",
-  "pesan": "Tidak ada data yang tersedia",
-  "data": []
-}
-```
-
 ### 6. Chatbot AI
 - **URL:** `/chatbot/{user_id}`
 - **Metode:** `POST`
