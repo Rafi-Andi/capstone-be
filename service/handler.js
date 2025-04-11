@@ -183,15 +183,13 @@ export const handlerDetailTransactions = async (request, h) => {
         .format("YYYY-MM-DD"),
     }));
 
-    if (formattedRows.length !== 0) {
-      return h
-        .response({
-          status: "Sukses",
-          pesan: "Berhasil mendapatkan detail transaksi",
-          data: formattedRows,
-        })
-        .code(200);
-    }
+    return h
+      .response({
+        status: "Sukses",
+        pesan: "Berhasil mendapatkan detail transaksi",
+        data: formattedRows,
+      })
+      .code(200);
   } catch (err) {
     return h
       .response({
