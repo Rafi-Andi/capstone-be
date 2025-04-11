@@ -191,14 +191,6 @@ export const handlerDetailTransactions = async (request, h) => {
           data: formattedRows,
         })
         .code(200);
-    } else {
-      return h
-        .response({
-          status: "Error",
-          pesan: "Tidak ada data yang tersedia",
-          data: [],
-        })
-        .code(404);
     }
   } catch (err) {
     return h
