@@ -10,7 +10,7 @@ export const handlerRegister = async (request, h) => {
   try {
     const { username, email, password } = request.payload;
 
-    const [rows] = await pool.query("SELECT * FROM users WHERE email = ? ", [
+    const { rows } = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
 
@@ -24,8 +24,8 @@ export const handlerRegister = async (request, h) => {
     }
     const user_id = `user-${nanoid(10)}`;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const [result] = await pool.query(
-      "INSERT INTO users (user_id, username, email, password) VALUES (?, ?, ?, ?)",
+    const result = await pool.query(
+      "INSERT INTO users (user_id, username, email, password) VALUES ($1, $2, $3, $4) RETURNING *",
       [user_id, username, email, hashedPassword]
     );
 
@@ -48,11 +48,12 @@ export const handlerRegister = async (request, h) => {
       .code(500);
   }
 };
+
 export const handlerLogin = async (request, h) => {
   try {
     const { email, password } = request.payload;
 
-    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [
+    const { rows } = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
 
@@ -105,8 +106,8 @@ export const handlerAddTransactions = async (request, h) => {
 
     const utcDate = localMoment.utc().format("YYYY-MM-DD HH:mm:ss");
 
-    const [result] = await pool.query(
-      "INSERT INTO transactions (user_id, amount, type, description, transaction_date) VALUES (?, ?, ?, ?, ?)",
+    const result = await pool.query(
+      "INSERT INTO transactions (user_id, amount, type, description, transaction_date) VALUES ($1, $2, $3, $4, $5) RETURNING *",
       [id, jumlah, type, deskripsi, utcDate]
     );
 
@@ -130,8 +131,8 @@ export const handlerSummaryTransactions = async (request, h) => {
   try {
     const { id } = request.auth.credentials;
 
-    const [rows] = await pool.query(
-      "SELECT * FROM `total_transactions` WHERE user_id = ?",
+    const { rows } = await pool.query(
+      "SELECT * FROM total_transactions WHERE user_id = $1",
       [id]
     );
 
@@ -161,16 +162,16 @@ export const handlerDetailTransactions = async (request, h) => {
   const { id } = request.auth.credentials;
 
   try {
-    const [rows] = await pool.query(
+    const { rows } = await pool.query(
       `SELECT 
         id,
         user_id,
-        CONCAT('Rp ', FORMAT(amount, 0, 'id_ID')) AS amount,
+        'Rp ' || TO_CHAR(amount, 'FM999,999,999,999') AS amount,
         type,
         description,
         transaction_date
       FROM transactions
-      WHERE user_id = ?
+      WHERE user_id = $1
       ORDER BY transaction_date DESC;`,
       [id]
     );
@@ -226,5 +227,95 @@ export const handlerChatBot = async (request, h) => {
       status: "Error",
       pesan: "Maaf terjadi masalah servis, mohon tunggu dan kirim kembali",
     });
+  }
+};
+
+export const handlerPredict = async (request, h) => {
+  const { id } = request.auth.credentials;
+  const { tanggal_prediksi } = request.payload;
+
+  try {
+    const { rows: transactionTypes } = await pool.query(
+      "SELECT type, COUNT(*) FROM transactions WHERE user_id = $1 GROUP BY type",
+      [id]
+    );
+
+    const hasIncome = transactionTypes.some(row => row.type === 'pemasukan');
+    const hasExpense = transactionTypes.some(row => row.type === 'pengeluaran');
+
+    if (!hasIncome || !hasExpense) {
+      return h.response({
+        status: 'Error',
+        message: 'Prediksi membutuhkan data pemasukan dan pengeluaran. Mohon tambahkan kedua jenis transaksi.'
+      }).code(400);
+    }
+
+    const { rows: uniqueDates } = await pool.query(
+      "SELECT COUNT(DISTINCT DATE(transaction_date)) as unique_date_count FROM transactions WHERE user_id = $1",
+      [id]
+    );
+
+    if (uniqueDates[0].unique_date_count < 2) {
+      return h.response({
+        status: 'Error',
+        message: 'Prediksi membutuhkan transaksi dengan minimal dua tanggal berbeda.'
+      }).code(400);
+    }
+
+    const payload = {
+      user_id: id,
+      tanggal_prediksi: tanggal_prediksi
+    };
+
+    const response = await axios.post(
+      'https://bimaardhia-lstm.hf.space/predict',
+      payload
+    );
+
+    if (!response.data || !response.data.tanggal) {
+      return h.response({
+        status: 'Error',
+        message: 'Respons dari server AI tidak valid.'
+      }).code(502);
+    }
+
+    const predictionData = response.data;
+    const predictionId = `pred-${nanoid(10)}`;
+
+    await pool.query(
+      `INSERT INTO predictions 
+       (prediction_id, user_id, prediction_date, predicted_balance, lower_bound, upper_bound, raw_data)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        predictionId,
+        id,
+        predictionData.tanggal,
+        predictionData.prediksi_saldo,
+        predictionData.batas_bawah,
+        predictionData.batas_atas,
+        JSON.stringify(predictionData)
+      ]
+    );
+
+    const formattedData = {
+      tanggal: predictionData.tanggal,
+      prediksi_saldo: `Rp ${predictionData.prediksi_saldo.toLocaleString('id-ID')}`,
+      batas_bawah: `Rp ${predictionData.batas_bawah.toLocaleString('id-ID')}`,
+      batas_atas: `Rp ${predictionData.batas_atas.toLocaleString('id-ID')}`
+    };
+
+    return h.response({
+      status: 'success',
+      data: {
+        prediction_id: predictionId,
+        ...formattedData
+      }
+    }).code(200);
+
+  } catch (err) {
+    return h.response({
+      status: 'Error',
+      message: err.response?.data || err.message
+    }).code(err.response?.status || 500);
   }
 };

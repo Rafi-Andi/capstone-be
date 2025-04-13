@@ -1,4 +1,4 @@
-import { handlerRegister, handlerLogin, handlerAddTransactions, handlerSummaryTransactions, handlerChatBot, handlerDetailTransactions } from "./service/handler.js";
+import { handlerRegister, handlerLogin, handlerAddTransactions, handlerSummaryTransactions, handlerChatBot, handlerDetailTransactions, handlerPredict } from "./service/handler.js";
 
 const routes = [
   {
@@ -37,6 +37,11 @@ const routes = [
     path: "/chatbot",
     handler: handlerChatBot
   },
+  {
+    method: "POST",
+    path: "/predict",
+    handler: handlerPredict
+  }
 ];
 
 export default routes
