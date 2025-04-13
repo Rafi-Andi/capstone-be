@@ -203,7 +203,69 @@
 }
 ```
 
+### 7. Prediksi Keuangan
+- **URL:** `/predict`
+- **Metode:** `POST`
+- **Autentikasi:** Token diperlukan
+
+#### Request
+```json
+{
+  "tanggal_prediksi": "2025-05-01"
+}
+```
+
+#### Response Sukses (200)
+
+```json
+{
+  "status": "success",
+  "data": {
+    "prediction_id": "pred-a1B2cD3eF",
+    "tanggal": "2025-05-01",
+    "prediksi_saldo": "Rp 2.740.000",
+    "batas_bawah": "Rp 2.400.000",
+    "batas_atas": "Rp 3.100.000"
+  }
+}
+```
+
+#### Response Gagal - Data tidak lengkap (400)
+```json
+{
+  "status": "fail",
+  "message": "Prediksi membutuhkan data pemasukan dan pengeluaran. Mohon tambahkan kedua jenis transaksi."
+}
+```
+
+#### Respons Gagal - Data Tidak Cukup (400)
+```json
+{
+  "status": "fail",
+  "message": "Prediksi membutuhkan transaksi dengan minimal dua tanggal berbeda."
+}
+```
+
+#### Respons Gagal - Server AI Tidak Valid (502)
+```json
+{
+  "status": "fail",
+  "message": "Respons dari server AI tidak valid."
+}
+```
+
+#### Respons Gagal - Error Internal (500)
+```json
+{
+  "status": "fail",
+  "message": "[Detail kesalahan dari server atau AI]"
+}
+```
+
+
 ## ⚠️ Catatan Penting
 - Semua endpoint kecuali `/register` dan `/login` memerlukan autentikasi dengan token JWT.
 - Token harus disertakan di header permintaan dengan format: `Authorization: Bearer [token]`.
 - Semua respons error akan menyertakan pesan yang informatif untuk membantu penyelesaian masalah.
+
+
